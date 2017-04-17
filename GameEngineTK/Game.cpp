@@ -4,13 +4,23 @@
 
 #include "pch.h"
 #include "Game.h"
-
+#include <PrimitiveBatch.h>
+#include <VertexTypes.h>
+#include <Effects.h>
+#include <CommonStates.h>
+#include <SimpleMath.h>
 
 extern void ExitGame();
 
 using namespace DirectX;
 
 using Microsoft::WRL::ComPtr;
+
+// ÉOÉçÅ[ÉoÉãïœêî
+std::unique_ptr<PrimitiveBatch<VertexPositionColor>> primitiveBatch;
+std::unique_ptr<BasicEffect> basicEffect;
+ComPtr<ID3D11InputLayout> inputLayout;
+
 
 Game::Game() :
     m_window(0),
@@ -23,7 +33,7 @@ Game::Game() :
 // Initialize the Direct3D resources required to run.
 void Game::Initialize(HWND window, int width, int height)
 {
-    m_window = window;
+	m_window = window;
     m_outputWidth = std::max(width, 1);
     m_outputHeight = std::max(height, 1);
 
@@ -37,6 +47,25 @@ void Game::Initialize(HWND window, int width, int height)
     m_timer.SetFixedTimeStep(true);
     m_timer.SetTargetElapsedSeconds(1.0 / 60);
     */
+
+	// èâä˙âª====================================
+	primitiveBatch = std::make_unique<PrimitiveBatch<VertexPositionColor>>(m_d3dContext.Get());
+
+	basicEffect = std::make_unique<BasicEffect>(m_d3dDevice.Get());
+
+	basicEffect->SetProjection(XMMatrixOrthographicOffCenterRH(0,
+		m_outputWidth, m_outputHeight, 0, 0, 1));
+	basicEffect->SetVertexColorEnabled(true);
+
+	void const* shaderByteCode;
+	size_t byteCodeLength;
+
+	basicEffect->GetVertexShaderBytecode(&shaderByteCode, &byteCodeLength);
+
+	m_d3dDevice->CreateInputLayout(VertexPositionColor::InputElements,
+		VertexPositionColor::InputElementCount,
+		shaderByteCode, byteCodeLength,
+		inputLayout.GetAddressOf());
 }
 
 // Executes the basic game loop.
@@ -57,6 +86,8 @@ void Game::Update(DX::StepTimer const& timer)
 
     // TODO: Add your game logic here.
     elapsedTime;
+
+	// çXêV====================================
 }
 
 // Draws the scene.
@@ -71,6 +102,24 @@ void Game::Render()
     Clear();
 
     // TODO: Add your rendering code here.
+
+	// ï`âÊ====================================
+	CommonStates states(m_d3dDevice.Get());
+	m_d3dContext->OMSetBlendState(states.Opaque(), nullptr, 0xFFFFFFFF);
+	m_d3dContext->OMSetDepthStencilState(states.DepthNone(), 0);
+	m_d3dContext->RSSetState(states.CullNone());
+
+	basicEffect->Apply(m_d3dContext.Get());
+	m_d3dContext->IASetInputLayout(inputLayout.Get());
+
+	// é¿ç€ÇÃï`âÊïîï™
+	primitiveBatch->Begin();		// Ç±Ç±Ç©ÇÁï`âÊ=====
+	primitiveBatch->DrawLine(
+		VertexPositionColor(SimpleMath::Vector3(0, 0, 0), Colors::Black),
+		VertexPositionColor(SimpleMath::Vector3(200, 100, 0), Colors::Green)
+	);
+	primitiveBatch->End();			// Ç±Ç±Ç‹Ç≈ï`âÊ=====
+
 
     Present();
 }
