@@ -65,6 +65,16 @@ void Game::Initialize(HWND window, int width, int height)
 
 	// デバッグカメラを生成
 	m_debugCamera = std::make_unique<DebugCamera>(m_outputWidth, m_outputHeight);
+
+	// エフェクトファクトリ生成
+	m_factory = std::make_unique<EffectFactory>(m_d3dDevice.Get());
+	// テクスチャのパス指定
+	m_factory->SetDirectory(L"Resources");
+	// モデルの生成
+	m_modelGound = Model::CreateFromCMO(m_d3dDevice.Get(), L"Resources\\ground1m.cmo", *m_factory);
+
+	m_modelSkydome = Model::CreateFromCMO(m_d3dDevice.Get(), L"Resources\\SkyDome.cmo", *m_factory);
+
 }
 
 // Executes the basic game loop.
@@ -137,7 +147,7 @@ void Game::Render()
 		XM_PI / 4.f,											// 視野角(上下方向)
 		float(m_outputWidth) / float(m_outputHeight),			// アスペクト比
 		0.1f,													// ニアクリップ
-		10.f);													// ファークリップ
+		500.f);													// ファークリップ
 
 
 	m_effect->SetView(m_view);
@@ -149,6 +159,11 @@ void Game::Render()
 
 
 	// 実際の描画部分
+
+	// モデルの描画
+	m_modelGound->Draw(m_d3dContext.Get(), *m_states, m_world, m_view, m_proj);
+	m_modelSkydome->Draw(m_d3dContext.Get(), *m_states, m_world, m_view, m_proj);
+
 	m_batch->Begin();		// ここから描画=====
 	//m_batch->DrawLine(
 	//	VertexPositionColor(Vector3(300, 300, 0), Colors::Black),
@@ -163,6 +178,8 @@ void Game::Render()
 	//m_batch->DrawTriangle(v1, v2, v3);
 
 	m_batch->DrawIndexed(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, indexes, 6, vertices, 4);
+
+
 
 	m_batch->End();			// ここまで描画=====
 
