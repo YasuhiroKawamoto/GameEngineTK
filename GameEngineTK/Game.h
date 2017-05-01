@@ -102,4 +102,24 @@ private:
 
 	// モデルデータ(天球)
 	std::unique_ptr<DirectX::Model> m_modelSkydome;
+
+	// モデルデータ(球)
+	std::unique_ptr<DirectX::Model> m_modelSphere;
+
+	static const int SPHERE_NUM = 21;
+	static const int GROUND_NUM = 40000;
+
+	
+	// 球のワールド行列
+	DirectX::SimpleMath::Matrix m_worldSpehre[SPHERE_NUM];
+
+	// 地面のワールド座標
+	DirectX::SimpleMath::Matrix m_worldGround[GROUND_NUM];
+
+
+	float m_angle;
+
+
+
+
 };
