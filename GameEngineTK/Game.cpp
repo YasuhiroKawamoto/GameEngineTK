@@ -4,7 +4,7 @@
 
 #include "pch.h"
 #include "Game.h"
-
+#include <time.h>
 
 
 extern void ExitGame();
@@ -26,20 +26,23 @@ Game::Game() :
 // Initialize the Direct3D resources required to run.
 void Game::Initialize(HWND window, int width, int height)
 {
+
+	srand(static_cast<unsigned int>(time(nullptr)));
+
 	m_window = window;
-    m_outputWidth = std::max(width, 1);
-    m_outputHeight = std::max(height, 1);
+	m_outputWidth = std::max(width, 1);
+	m_outputHeight = std::max(height, 1);
 
-    CreateDevice();
+	CreateDevice();
 
-    CreateResources();
+	CreateResources();
 
-    // TODO: Change the timer settings if you want something other than the default variable timestep mode.
-    // e.g. for 60 FPS fixed timestep update logic, call:
-    /*
-    m_timer.SetFixedTimeStep(true);
-    m_timer.SetTargetElapsedSeconds(1.0 / 60);
-    */
+	// TODO: Change the timer settings if you want something other than the default variable timestep mode.
+	// e.g. for 60 FPS fixed timestep update logic, call:
+	/*
+	m_timer.SetFixedTimeStep(true);
+	m_timer.SetTargetElapsedSeconds(1.0 / 60);
+	*/
 
 	// 初期化====================================
 	m_batch = std::make_unique<PrimitiveBatch<VertexPositionNormal>>(m_d3dContext.Get());
@@ -71,13 +74,24 @@ void Game::Initialize(HWND window, int width, int height)
 	// テクスチャのパス指定
 	m_factory->SetDirectory(L"Resources");
 	// モデルの生成
-	m_modelGound = Model::CreateFromCMO(m_d3dDevice.Get(), L"Resources\\ground1m.cmo", *m_factory);
+	m_modelGound = Model::CreateFromCMO(m_d3dDevice.Get(), L"Resources\\ground200m.cmo", *m_factory);
 
 	m_modelSkydome = Model::CreateFromCMO(m_d3dDevice.Get(), L"Resources\\SkyDome.cmo", *m_factory);
 
-	m_modelSphere = Model::CreateFromCMO(m_d3dDevice.Get(), L"Resources\\Sphere.cmo", *m_factory);
+	m_modelPot = Model::CreateFromCMO(m_d3dDevice.Get(), L"Resources\\Pot.cmo", *m_factory);
+
+	//m_modelSphere = Model::CreateFromCMO(m_d3dDevice.Get(), L"Resources\\Sphere.cmo", *m_factory);
 
 	m_angle = 0.0f;
+	m_time = 600;
+
+	// ポット
+	for (int i = 0; i < Game::POT_NUM; i++)
+	{
+		m_rndAng[i] = rand() % 360;
+		m_rndDis[i] = rand() % 100;
+	}
+
 }
 
 // Executes the basic game loop.
@@ -94,10 +108,10 @@ void Game::Tick()
 // Updates the world.
 void Game::Update(DX::StepTimer const& timer)
 {
-    float elapsedTime = float(timer.GetElapsedSeconds());
+	float elapsedTime = float(timer.GetElapsedSeconds());
 
-    // TODO: Add your game logic here.
-    elapsedTime;
+	// TODO: Add your game logic here.
+	elapsedTime;
 
 	// 更新====================================
 	// デバッグカメラ
@@ -105,80 +119,127 @@ void Game::Update(DX::StepTimer const& timer)
 
 
 	m_angle += 1.0f;
+	if (m_time > 0)
+	{
+		m_time--;
+	}
+
+#pragma region スフィア
+
+
 	// 行列の計算
-	for (int i = 0; i < Game::SPHERE_NUM; i++)
+	//for (int i = 0; i < Game::SPHERE_NUM; i++)
+	//{
+	//	// スケーリング
+	//	Matrix scalemat = Matrix::CreateScale(1.0f);
+	//	m_worldSpehre[i] = scalemat;
+
+	//	Matrix rotmaty;
+
+	//	// 平行移動
+	//	Matrix transmat;
+
+	//	if (i >= SPHERE_NUM-1)
+	//	{
+	//		rotmaty = Matrix::CreateRotationY(XMConvertToRadians(-m_angle));
+
+	//		scalemat = Matrix::CreateScale(2.0f);
+	//	}
+	//	else if (i < SPHERE_NUM / 2)
+	//	{
+	//		transmat = Matrix::CreateTranslation( sin(i * XMConvertToRadians(36.0f)) * 20, 0.0f, cos(i * XMConvertToRadians(36.0f)) * 20);
+
+	//		rotmaty = Matrix::CreateRotationY(XMConvertToRadians(m_angle));
+	//	}
+	//	else
+	//	{
+	//		transmat = Matrix::CreateTranslation(sin(i * XMConvertToRadians(36.0f)) * 40, 0.0f, cos(i * XMConvertToRadians(36.0f)) * 40);
+	//		rotmaty = Matrix::CreateRotationY(XMConvertToRadians(-m_angle));
+	//	}
+	//	
+	//	m_worldSpehre[i] = transmat;
+	//	
+	//	// 回転
+	//	// ロール
+	//	// ピッチ
+	//	Matrix rotmatx = Matrix::CreateRotationX(XMConvertToRadians(0.0f));
+	//	// ヨー
+	//	Matrix rotmatz = Matrix::CreateRotationZ(XMConvertToRadians(0.0f));
+
+
+	//	// 回転行列の合成
+	//	Matrix rotmat = rotmatz* rotmatx * rotmaty;
+
+	//	// ワールド行列の合成()
+	//	m_worldSpehre[i] = scalemat *transmat* rotmat ;
+
+	//}
+
+#pragma endregion
+
+	for (int i = 0; i < Game::POT_NUM; i++)
 	{
-		// スケーリング
-		Matrix scalemat = Matrix::CreateScale(1.0f);
-		m_worldSpehre[i] = scalemat;
+		//int rnd = rand() % 360;
 
-		Matrix rotmaty;
+		//float angle = XMConvertToRadians(static_cast<float>(rnd));
 
-		// 平行移動
+		//// サイズ
+		Matrix scalemat = Matrix::CreateScale((sinf(m_angle / 100) + 2.0f)*5.0f);
+
+		//// 座標
 		Matrix transmat;
 
-		if (i >= SPHERE_NUM-1)
-		{
-			rotmaty = Matrix::CreateRotationY(XMConvertToRadians(-m_angle));
-
-			scalemat = Matrix::CreateScale(2.0f);
-		}
-		else if (i < SPHERE_NUM / 2)
-		{
-			transmat = Matrix::CreateTranslation( sin(i * XMConvertToRadians(36.0f)) * 20, 0.0f, cos(i * XMConvertToRadians(36.0f)) * 20);
-
-			rotmaty = Matrix::CreateRotationY(XMConvertToRadians(m_angle));
-		}
-		else
-		{
-			transmat = Matrix::CreateTranslation(sin(i * XMConvertToRadians(36.0f)) * 40, 0.0f, cos(i * XMConvertToRadians(36.0f)) * 40);
-			rotmaty = Matrix::CreateRotationY(XMConvertToRadians(-m_angle));
-		}
 		
-		m_worldSpehre[i] = transmat;
-		
+
+		float angle = XMConvertToRadians(static_cast<float>(m_rndAng[i]));
+
+		transmat = Matrix::CreateTranslation((cosf(angle)*m_rndDis[i] *m_time)/600, 0.0f, (sinf(angle)*m_rndDis[i]*m_time) / 600);
+
 		// 回転
+
 		// ロール
+		Matrix rotmatz = Matrix::CreateRotationZ(XMConvertToRadians(0.0f));
 		// ピッチ
 		Matrix rotmatx = Matrix::CreateRotationX(XMConvertToRadians(0.0f));
 		// ヨー
-		Matrix rotmatz = Matrix::CreateRotationZ(XMConvertToRadians(0.0f));
-
+		Matrix rotmaty = Matrix::CreateRotationY(XMConvertToRadians(m_angle));
 
 		// 回転行列の合成
 		Matrix rotmat = rotmatz* rotmatx * rotmaty;
 
-		// ワールド行列の合成()
-		m_worldSpehre[i] = scalemat *transmat* rotmat ;
-
+		m_worldPot[i] = scalemat * rotmat *transmat;
 	}
-
-	//
-	for (int i = 0; i < Game::GROUND_NUM; i++)
-	{
-		Matrix scalemat = Matrix::CreateScale(1.0f);
-
-		Matrix transmat;
-
-		transmat = Matrix::CreateTranslation(i % 200-100, 0.f, i / 200 - 100);
-
-		// 回転
-		// ロール
-
-		Matrix rotmatz = Matrix::CreateRotationZ(XMConvertToRadians(0.0f));
-		// ピッチ
-		Matrix rotmatx = Matrix::CreateRotationX(XMConvertToRadians(0.0f));
-		// ヨー
-		Matrix rotmaty = Matrix::CreateRotationY(XMConvertToRadians(0.0f));
-
-		// 回転行列の合成
-		Matrix rotmat = rotmatz* rotmatx * rotmaty;
-
-		// ワールド行列の合成()
-		m_worldGround[i] = scalemat * rotmat *transmat;
-	}
-
 }
+
+
+#pragma region グラウンド
+
+	//// 地面
+	//for (int i = 0; i < Game::GROUND_NUM; i++)
+	//{
+	//	Matrix scalemat = Matrix::CreateScale(1.0f);
+
+	//	Matrix transmat;
+
+	//	transmat = Matrix::CreateTranslation(i % 200-100, 0.f, i / 200 - 100);
+
+	//	// 回転
+	//	// ロール
+
+	//	Matrix rotmatz = Matrix::CreateRotationZ(XMConvertToRadians(0.0f));
+	//	// ピッチ
+	//	Matrix rotmatx = Matrix::CreateRotationX(XMConvertToRadians(0.0f));
+	//	// ヨー
+	//	Matrix rotmaty = Matrix::CreateRotationY(XMConvertToRadians(0.0f));
+
+	//	// 回転行列の合成
+	//	Matrix rotmat = rotmatz* rotmatx * rotmaty;
+
+	//	// ワールド行列の合成()
+	//	m_worldGround[i] = scalemat * rotmat *transmat;
+	//}
+#pragma endregion
+
 
 // Draws the scene.
 void Game::Render()
@@ -241,18 +302,24 @@ void Game::Render()
 	// 実際の描画部分
 
 	// モデルの描画
-	for (int i = 0; i < Game::GROUND_NUM; i++)
+	//for (int i = 0; i < Game::GROUND_NUM; i++)
+	//{
+	//	m_modelGound->Draw(m_d3dContext.Get(), *m_states, m_worldGround[i], m_view, m_proj);
+	//}
+	for (int i = 0; i < Game::POT_NUM; i++)
 	{
-		m_modelGound->Draw(m_d3dContext.Get(), *m_states, m_worldGround[i], m_view, m_proj);
+		m_modelPot->Draw(m_d3dContext.Get(), *m_states, m_worldPot[i], m_view, m_proj);
 	}
+	
+	m_modelGound->Draw(m_d3dContext.Get(), *m_states, Matrix::Identity, m_view, m_proj);
+	
 
+	m_modelSkydome->Draw(m_d3dContext.Get(), *m_states, Matrix::Identity, m_view, m_proj);
 
-	m_modelSkydome->Draw(m_d3dContext.Get(), *m_states, m_world, m_view, m_proj);
-
-	for (int i = 0; i < Game::SPHERE_NUM; i++)
-	{
-		m_modelSphere->Draw(m_d3dContext.Get(), *m_states, m_worldSpehre[i], m_view, m_proj);
-	}
+	//for (int i = 0; i < Game::SPHERE_NUM; i++)
+	//{
+	//	m_modelSphere->Draw(m_d3dContext.Get(), *m_states, m_worldSpehre[i], m_view, m_proj);
+	//}
 
 	m_batch->Begin();		// ここから描画=====
 	//m_batch->DrawLine(

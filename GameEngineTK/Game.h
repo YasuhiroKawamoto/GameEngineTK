@@ -104,18 +104,30 @@ private:
 	std::unique_ptr<DirectX::Model> m_modelSkydome;
 
 	// モデルデータ(球)
-	std::unique_ptr<DirectX::Model> m_modelSphere;
+	//std::unique_ptr<DirectX::Model> m_modelSphere;
 
-	static const int SPHERE_NUM = 21;
+	// モデルデータ(ポット)
+	std::unique_ptr<DirectX::Model> m_modelPot;
+
+	// static const int SPHERE_NUM = 21;
+	static const int POT_NUM = 20;
+
 	static const int GROUND_NUM = 40000;
 
 	
 	// 球のワールド行列
-	DirectX::SimpleMath::Matrix m_worldSpehre[SPHERE_NUM];
+	// DirectX::SimpleMath::Matrix m_worldSpehre[SPHERE_NUM];
 
 	// 地面のワールド座標
 	DirectX::SimpleMath::Matrix m_worldGround[GROUND_NUM];
 
+	// ポットのワールド行列
+	DirectX::SimpleMath::Matrix m_worldPot[POT_NUM];
+
+	int m_rndAng[POT_NUM];
+	int m_rndDis[POT_NUM];
+
+	int m_time;
 
 	float m_angle;
 
