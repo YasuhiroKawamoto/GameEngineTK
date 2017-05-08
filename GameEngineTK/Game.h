@@ -11,8 +11,10 @@
 #include <CommonStates.h>
 #include <SimpleMath.h>
 #include <Model.h>
+#include <Keyboard.h>
 
 #include "DebugCamera.h"
+
 
 // A basic game implementation that creates a D3D11 device and
 // provides a game loop.
@@ -109,6 +111,10 @@ private:
 	// モデルデータ(ポット)
 	std::unique_ptr<DirectX::Model> m_modelPot;
 
+	// モデルデータ(あたま)
+	std::unique_ptr<DirectX::Model> m_modelHead;
+
+
 	// static const int SPHERE_NUM = 21;
 	static const int POT_NUM = 20;
 
@@ -124,6 +130,13 @@ private:
 	// ポットのワールド行列
 	DirectX::SimpleMath::Matrix m_worldPot[POT_NUM];
 
+	// ヘッドのワールド行列
+	DirectX::SimpleMath::Matrix m_worldHead;
+	DirectX::SimpleMath::Vector3 m_headPos;
+	float m_headRota;
+
+
+
 	int m_rndAng[POT_NUM];
 	int m_rndDis[POT_NUM];
 
@@ -131,6 +144,8 @@ private:
 
 	float m_angle;
 
+	// キーボード
+	std::unique_ptr<DirectX::Keyboard> m_keyboard;
 
 
 

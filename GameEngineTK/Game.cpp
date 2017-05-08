@@ -33,6 +33,9 @@ void Game::Initialize(HWND window, int width, int height)
 	m_outputWidth = std::max(width, 1);
 	m_outputHeight = std::max(height, 1);
 
+	// キーボードの生成
+	m_keyboard = std::make_unique<Keyboard>();
+
 	CreateDevice();
 
 	CreateResources();
@@ -44,7 +47,7 @@ void Game::Initialize(HWND window, int width, int height)
 	m_timer.SetTargetElapsedSeconds(1.0 / 60);
 	*/
 
-	// 初期化====================================
+	// 初期化===================================
 	m_batch = std::make_unique<PrimitiveBatch<VertexPositionNormal>>(m_d3dContext.Get());
 
 	m_effect = std::make_unique<BasicEffect>(m_d3dDevice.Get());
@@ -80,6 +83,9 @@ void Game::Initialize(HWND window, int width, int height)
 
 	m_modelPot = Model::CreateFromCMO(m_d3dDevice.Get(), L"Resources\\Pot.cmo", *m_factory);
 
+
+	m_modelHead = Model::CreateFromCMO(m_d3dDevice.Get(), L"Resources\\Head.cmo", *m_factory);
+
 	//m_modelSphere = Model::CreateFromCMO(m_d3dDevice.Get(), L"Resources\\Sphere.cmo", *m_factory);
 
 	m_angle = 0.0f;
@@ -108,6 +114,9 @@ void Game::Tick()
 // Updates the world.
 void Game::Update(DX::StepTimer const& timer)
 {
+	// キー更新
+	auto kb = m_keyboard->GetState();
+
 	float elapsedTime = float(timer.GetElapsedSeconds());
 
 	// TODO: Add your game logic here.
@@ -195,6 +204,8 @@ void Game::Update(DX::StepTimer const& timer)
 
 		transmat = Matrix::CreateTranslation((cosf(angle)*m_rndDis[i] *m_time)/600, 0.0f, (sinf(angle)*m_rndDis[i]*m_time) / 600);
 
+
+
 		// 回転
 
 		// ロール
@@ -209,6 +220,43 @@ void Game::Update(DX::StepTimer const& timer)
 
 		m_worldPot[i] = scalemat * rotmat *transmat;
 	}
+
+	
+
+	if (kb.A)
+	{
+		m_headRota += 0.1f;
+	}
+
+	if (kb.D)
+	{
+		m_headRota += -0.1f;
+	}
+
+	//　あたま
+	if (kb.W)
+	{
+		Vector3 moveV(0.0f, 0.0f, -0.1f);
+
+		// 移動ベクトルを回転
+		moveV = Vector3::TransformNormal(moveV, m_worldHead);
+
+		m_headPos += moveV;
+	}
+
+	if (kb.S)
+	{
+		Vector3 moveV(0.0f, 0.0f, 0.1f);
+		// 移動ベクトルを回転
+		moveV = Vector3::TransformNormal(moveV, m_worldHead);
+
+		m_headPos += moveV;
+	}
+
+	Matrix transmat = Matrix::CreateTranslation(m_headPos);
+
+
+	m_worldHead = Matrix::CreateRotationY(m_headRota) * transmat;;
 }
 
 
@@ -313,6 +361,8 @@ void Game::Render()
 	
 	m_modelGound->Draw(m_d3dContext.Get(), *m_states, Matrix::Identity, m_view, m_proj);
 	
+	// 頭
+	m_modelHead->Draw(m_d3dContext.Get(), *m_states, m_worldHead, m_view, m_proj);
 
 	m_modelSkydome->Draw(m_d3dContext.Get(), *m_states, Matrix::Identity, m_view, m_proj);
 
