@@ -148,6 +148,8 @@ private:
 
 	// キーボード
 	std::unique_ptr<DirectX::Keyboard> m_keyboard;
+	std::unique_ptr<DirectX::Keyboard::KeyboardStateTracker> m_keyboardTracker;
+
 
 	std::unique_ptr<FollowCamera> m_camera;
 };

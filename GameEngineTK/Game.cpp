@@ -35,6 +35,8 @@ void Game::Initialize(HWND window, int width, int height)
 
 	// キーボードの生成
 	m_keyboard = std::make_unique<Keyboard>();
+	m_keyboardTracker = std::make_unique<Keyboard::KeyboardStateTracker>();
+
 
 	// カメラ生成
 	m_camera = std::make_unique<FollowCamera>(m_outputWidth, m_outputHeight);
@@ -121,6 +123,8 @@ void Game::Update(DX::StepTimer const& timer)
 {
 	// キー更新
 	auto kb = m_keyboard->GetState();
+
+	m_keyboardTracker->Update(kb);
 
 	float elapsedTime = float(timer.GetElapsedSeconds());
 
@@ -238,7 +242,9 @@ void Game::Update(DX::StepTimer const& timer)
 	}
 
 
-	//　あたま
+	//＝＝＝＝＝<<あたま>>===============
+
+	// 前進
 	if (kb.W)
 	{
 		Vector3 moveV(0.0f, 0.0f, -0.1f);
@@ -250,6 +256,7 @@ void Game::Update(DX::StepTimer const& timer)
 		m_headPos += moveV;
 	}
 
+	//　後退
 	if (kb.S)
 	{
 		Vector3 moveV(0.0f, 0.0f, 0.1f);
@@ -259,6 +266,28 @@ void Game::Update(DX::StepTimer const& timer)
 		moveV = Vector3::TransformNormal(moveV, rotmat);
 
 		m_headPos += moveV;
+	}
+
+
+	// ジャンプ
+	static float jumpPower = 0.0f;
+	if (kb.Space && m_headPos.y ==0)
+	{
+		jumpPower = 0.5f;
+	}
+
+	// カメラ切り替え
+	if (m_keyboardTracker->pressed.C)
+	{
+		m_camera->SetMode(m_camera->GetMode()%2+1);
+	}
+
+	//重力
+	jumpPower -= 0.025f;
+	m_headPos.y += jumpPower;
+	if (m_headPos.y < 0)
+	{
+		m_headPos.y = 0.0f;
 	}
 
 	Matrix rotmat = Matrix::CreateRotationY(m_headRota);

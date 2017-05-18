@@ -4,14 +4,24 @@
 #pragma once		
 #include "Camera.h"
 
+
+
 class FollowCamera : public Camera
 {
 private:
+	enum MODE
+	{
+		FPS = 1,
+		TPS
+	};
 	// ‘ÎÛ‚ÌÀ•W
 	DirectX::SimpleMath::Vector3 m_targetPos;
 
 	// ‘ÎÛ‚Ì‰ñ“]Šp
 	float m_targetAngle;
+
+	// ƒJƒƒ‰ƒ‚[ƒh
+	int m_mode;
 public:
 	static const float CAMERA_DISTANCE;
 
@@ -25,5 +35,15 @@ public:
 	void SetTargetPos(const DirectX::SimpleMath::Vector3& targetpos);
 	// ’Ç]‘ÎÛ‚Ì‰ñ“]Šp‚ğƒZƒbƒg
 	void SetTargetAngle(float targetangle);
+
+	void SetMode(int mode)
+	{
+		m_mode = mode;
+	}
+
+	int GetMode()
+	{
+		return m_mode;
+	}
 
 };
