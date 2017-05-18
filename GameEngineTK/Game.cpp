@@ -36,6 +36,9 @@ void Game::Initialize(HWND window, int width, int height)
 	// キーボードの生成
 	m_keyboard = std::make_unique<Keyboard>();
 
+	// カメラ生成
+	m_camera = std::make_unique<FollowCamera>(m_outputWidth, m_outputHeight);
+
 	CreateDevice();
 
 	CreateResources();
@@ -48,6 +51,8 @@ void Game::Initialize(HWND window, int width, int height)
 	*/
 
 	// 初期化===================================
+	m_headPos = Vector3(0,0,-10);
+	m_headRota = 0;
 	m_batch = std::make_unique<PrimitiveBatch<VertexPositionNormal>>(m_d3dContext.Get());
 
 	m_effect = std::make_unique<BasicEffect>(m_d3dDevice.Get());
@@ -124,8 +129,7 @@ void Game::Update(DX::StepTimer const& timer)
 
 	// 更新====================================
 	// デバッグカメラ
-	m_debugCamera->Update();
-
+	//m_debugCamera->Update();
 
 	m_angle += 1.0f;
 	if (m_time > 0)
@@ -225,13 +229,14 @@ void Game::Update(DX::StepTimer const& timer)
 
 	if (kb.A)
 	{
-		m_headRota += 0.1f;
+		m_headRota += 0.03f;
 	}
 
 	if (kb.D)
 	{
-		m_headRota += -0.1f;
+		m_headRota += -0.03f;
 	}
+
 
 	//　あたま
 	if (kb.W)
@@ -239,7 +244,8 @@ void Game::Update(DX::StepTimer const& timer)
 		Vector3 moveV(0.0f, 0.0f, -0.1f);
 
 		// 移動ベクトルを回転
-		moveV = Vector3::TransformNormal(moveV, m_worldHead);
+		Matrix rotmat = Matrix::CreateRotationY(m_headRota);
+		moveV = Vector3::TransformNormal(moveV, rotmat);
 
 		m_headPos += moveV;
 	}
@@ -248,17 +254,30 @@ void Game::Update(DX::StepTimer const& timer)
 	{
 		Vector3 moveV(0.0f, 0.0f, 0.1f);
 		// 移動ベクトルを回転
-		moveV = Vector3::TransformNormal(moveV, m_worldHead);
+		Matrix rotmat = Matrix::CreateRotationY(m_headRota);
+
+		moveV = Vector3::TransformNormal(moveV, rotmat);
 
 		m_headPos += moveV;
 	}
 
+	Matrix rotmat = Matrix::CreateRotationY(m_headRota);
+
 	Matrix transmat = Matrix::CreateTranslation(m_headPos);
+	m_worldHead = rotmat * transmat;
 
+	// カメラ設定(自機追従) 
+	{
+		// カメラ更新
+		m_camera->SetTargetAngle(m_headRota);
+		m_camera->SetTargetPos(m_headPos);
+		m_camera->Update();
 
-	m_worldHead = Matrix::CreateRotationY(m_headRota) * transmat;;
+		m_view = m_camera->GetView();
+		m_proj = m_camera->GetProj();
+	}
+
 }
-
 
 #pragma region グラウンド
 
@@ -307,15 +326,15 @@ void Game::Render()
 		{ Vector3(+1.0f,-1.0f, 0.0f),Vector3(0.0f,0.0f, +1.0f) },
 	};
 
-    // Don't try to render anything before the first Update.
-    if (m_timer.GetFrameCount() == 0)
-    {
-        return;
-    }
+	// Don't try to render anything before the first Update.
+	if (m_timer.GetFrameCount() == 0)
+	{
+		return;
+	}
 
-    Clear();
+	Clear();
 
-    // TODO: Add your rendering code here.
+	// TODO: Add your rendering code here.
 
 	// 描画====================================
 	m_d3dContext->OMSetBlendState(m_states->Opaque(), nullptr, 0xFFFFFFFF);
@@ -329,14 +348,38 @@ void Game::Render()
 	//	Vector3(0.f, 1.f, 0.f)									// 上方向ベクトル
 	//);										
 
-	m_view = m_debugCamera->GetCameraMatrix();
+	// m_view = m_debugCamera->GetCameraMatrix();
 
-	// プロジェクション行列を生成
-	m_proj = Matrix::CreatePerspectiveFieldOfView(
-		XM_PI / 4.f,											// 視野角(上下方向)
-		float(m_outputWidth) / float(m_outputHeight),			// アスペクト比
-		0.1f,													// ニアクリップ
-		500.f);													// ファークリップ
+	//// カメラの位置(視点座標)
+	//Vector3 eyePos(m_headPos.x, m_headPos.y+ 2.0f, m_headPos.z + 5.0f);
+
+	//// カメラの見ている先(注視点)
+	//Vector3 targetPos(m_headPos);
+
+	//// カメラの上方向ベクトル
+	//Vector3 upVec(0.0f, 1.0f, 0.0f);
+	//upVec.Normalize();
+
+
+	//m_view = Matrix::CreateLookAt(eyePos, targetPos, upVec);
+
+	//// 垂直方向視野角
+	//float fovT = XMConvertToRadians(60);
+
+	//// アスペクト比(横×縦の画面比率)
+	//float aspect = (float)m_outputWidth / m_outputHeight;
+
+	//// ニアクリップ
+	//float nearClip = 0.1f;
+
+	//// ファークリップ
+	//float farClip = 1000.0f;
+
+	//// プロジェクション行列を生成
+	//m_proj = Matrix::CreatePerspectiveFieldOfView(
+	//	fovT,aspect,nearClip,farClip);
+											
+											
 
 
 	m_effect->SetView(m_view);
@@ -354,11 +397,13 @@ void Game::Render()
 	//{
 	//	m_modelGound->Draw(m_d3dContext.Get(), *m_states, m_worldGround[i], m_view, m_proj);
 	//}
-	for (int i = 0; i < Game::POT_NUM; i++)
-	{
-		m_modelPot->Draw(m_d3dContext.Get(), *m_states, m_worldPot[i], m_view, m_proj);
-	}
-	
+
+	//for (int i = 0; i < Game::POT_NUM; i++)
+	//{
+	//	m_modelPot->Draw(m_d3dContext.Get(), *m_states, m_worldPot[i], m_view, m_proj);
+	//}
+	//
+
 	m_modelGound->Draw(m_d3dContext.Get(), *m_states, Matrix::Identity, m_view, m_proj);
 	
 	// 頭
