@@ -17,7 +17,8 @@ FollowCamera::FollowCamera(int width, int height)
 {
 	m_targetPos = Vector3::Zero;
 	m_targetAngle = 0.0f;
-	m_mode = 1;
+	m_mode = 2;
+	m_player = nullptr;
 }
 
 void FollowCamera::Update()
@@ -30,7 +31,7 @@ void FollowCamera::Update()
 	{
 		Vector3 eyePoint;
 		// 始点座標を計算
-		eyePoint = m_targetPos + Vector3(0.0f, 0.2f, 0.0f);
+		eyePoint = m_targetPos + Vector3(0.0f, 1.3f, 0.0f);
 		// 自機からカメラ座標への差分
 		Vector3 cameraV(0, 0, -CAMERA_DISTANCE);
 		// 自機の後ろに回り込む為の回転行列
@@ -68,6 +69,13 @@ void FollowCamera::Update()
 		refpos = m_targetPos + (refpos - m_targetPos)*REF_DELAY;
 	}
 		
+	// カメラ更新
+	if (m_player)
+	{
+		SetTargetAngle(m_player->GetParts()[0].GetRotation().y);
+		SetTargetPos(m_player->GetParts()[0].GetTranslation());
+	}
+
 
 
 	SetEyePos(eyepos);

@@ -7,6 +7,7 @@
 #include <time.h>
 
 
+
 extern void ExitGame();
 
 using namespace DirectX;
@@ -33,7 +34,12 @@ void Game::Initialize(HWND window, int width, int height)
 	m_outputWidth = std::max(width, 1);
 	m_outputHeight = std::max(height, 1);
 
-	// キーボードの生成
+	CreateDevice();
+
+	CreateResources();
+
+
+	//// キーボードの生成
 	m_keyboard = std::make_unique<Keyboard>();
 	m_keyboardTracker = std::make_unique<Keyboard::KeyboardStateTracker>();
 
@@ -41,9 +47,6 @@ void Game::Initialize(HWND window, int width, int height)
 	// カメラ生成
 	m_camera = std::make_unique<FollowCamera>(m_outputWidth, m_outputHeight);
 
-	CreateDevice();
-
-	CreateResources();
 
 	// TODO: Change the timer settings if you want something other than the default variable timestep mode.
 	// e.g. for 60 FPS fixed timestep update logic, call:
@@ -53,8 +56,32 @@ void Game::Initialize(HWND window, int width, int height)
 	*/
 
 	// 初期化===================================
-	m_headPos = Vector3(0,0,-10);
-	m_headRota = 0;
+
+	// 3dオブジェクトの静的メンバ変数初期化
+	Obj3d::InitializeStatic(m_d3dDevice, m_d3dContext, m_camera.get());
+
+	// プレイヤーの生成
+	m_player = std::make_unique<Player>(m_keyboard.get(), m_keyboardTracker.get());
+
+	// プレイヤー初期化
+	m_player->Load();
+	m_player->Init();
+	m_camera->SetPlayer(m_player.get());
+
+	
+	// エネミー生成
+	int enemyNum = rand() % 10 + 1;
+
+	m_enemies.resize(enemyNum);
+
+	// エネミー初期化
+	for (int i = 0; i < enemyNum; i++)
+	{
+		m_enemies[i] = std::make_unique<Enemy>();
+		m_enemies[i]->Load();
+		m_enemies[i]->Init();
+	}
+
 	m_batch = std::make_unique<PrimitiveBatch<VertexPositionNormal>>(m_d3dContext.Get());
 
 	m_effect = std::make_unique<BasicEffect>(m_d3dDevice.Get());
@@ -84,26 +111,9 @@ void Game::Initialize(HWND window, int width, int height)
 	// テクスチャのパス指定
 	m_factory->SetDirectory(L"Resources");
 	// モデルの生成
-	m_modelGound = Model::CreateFromCMO(m_d3dDevice.Get(), L"Resources\\ground200m.cmo", *m_factory);
+	m_ObjGround.LoadModel(L"Resources\\ground200m.cmo");
 
-	m_modelSkydome = Model::CreateFromCMO(m_d3dDevice.Get(), L"Resources\\SkyDome.cmo", *m_factory);
-
-	m_modelPot = Model::CreateFromCMO(m_d3dDevice.Get(), L"Resources\\Pot.cmo", *m_factory);
-
-
-	m_modelHead = Model::CreateFromCMO(m_d3dDevice.Get(), L"Resources\\Head.cmo", *m_factory);
-
-	//m_modelSphere = Model::CreateFromCMO(m_d3dDevice.Get(), L"Resources\\Sphere.cmo", *m_factory);
-
-	m_angle = 0.0f;
-	m_time = 600;
-
-	// ポット
-	for (int i = 0; i < Game::POT_NUM; i++)
-	{
-		m_rndAng[i] = rand() % 360;
-		m_rndDis[i] = rand() % 100;
-	}
+	m_ObjSkydome.LoadModel(L"Resources\\SkyDome.cmo");
 
 }
 
@@ -121,10 +131,6 @@ void Game::Tick()
 // Updates the world.
 void Game::Update(DX::StepTimer const& timer)
 {
-	// キー更新
-	auto kb = m_keyboard->GetState();
-
-	m_keyboardTracker->Update(kb);
 
 	float elapsedTime = float(timer.GetElapsedSeconds());
 
@@ -135,11 +141,6 @@ void Game::Update(DX::StepTimer const& timer)
 	// デバッグカメラ
 	//m_debugCamera->Update();
 
-	m_angle += 1.0f;
-	if (m_time > 0)
-	{
-		m_time--;
-	}
 
 #pragma region スフィア
 
@@ -194,6 +195,8 @@ void Game::Update(DX::StepTimer const& timer)
 
 #pragma endregion
 
+	// ポット
+	/*
 	for (int i = 0; i < Game::POT_NUM; i++)
 	{
 		//int rnd = rand() % 360;
@@ -228,53 +231,19 @@ void Game::Update(DX::StepTimer const& timer)
 
 		m_worldPot[i] = scalemat * rotmat *transmat;
 	}
+	*/
 
+	// プレイヤー更新
+	m_player->Update();
+
+	// エネミー更新
+	std::vector<std::unique_ptr<Enemy>>::iterator itr;
+	for (itr = m_enemies.begin(); itr != m_enemies.end(); itr++)
+	{
+		(*itr)->Update();
+	}
 	
 
-	if (kb.A)
-	{
-		m_headRota += 0.03f;
-	}
-
-	if (kb.D)
-	{
-		m_headRota += -0.03f;
-	}
-
-
-	//＝＝＝＝＝<<あたま>>===============
-
-	// 前進
-	if (kb.W)
-	{
-		Vector3 moveV(0.0f, 0.0f, -0.1f);
-
-		// 移動ベクトルを回転
-		Matrix rotmat = Matrix::CreateRotationY(m_headRota);
-		moveV = Vector3::TransformNormal(moveV, rotmat);
-
-		m_headPos += moveV;
-	}
-
-	//　後退
-	if (kb.S)
-	{
-		Vector3 moveV(0.0f, 0.0f, 0.1f);
-		// 移動ベクトルを回転
-		Matrix rotmat = Matrix::CreateRotationY(m_headRota);
-
-		moveV = Vector3::TransformNormal(moveV, rotmat);
-
-		m_headPos += moveV;
-	}
-
-
-	// ジャンプ
-	static float jumpPower = 0.0f;
-	if (kb.Space && m_headPos.y ==0)
-	{
-		jumpPower = 0.5f;
-	}
 
 	// カメラ切り替え
 	if (m_keyboardTracker->pressed.C)
@@ -282,30 +251,15 @@ void Game::Update(DX::StepTimer const& timer)
 		m_camera->SetMode(m_camera->GetMode()%2+1);
 	}
 
-	//重力
-	jumpPower -= 0.025f;
-	m_headPos.y += jumpPower;
-	if (m_headPos.y < 0)
-	{
-		m_headPos.y = 0.0f;
-	}
-
-	Matrix rotmat = Matrix::CreateRotationY(m_headRota);
-
-	Matrix transmat = Matrix::CreateTranslation(m_headPos);
-	m_worldHead = rotmat * transmat;
-
 	// カメラ設定(自機追従) 
 	{
-		// カメラ更新
-		m_camera->SetTargetAngle(m_headRota);
-		m_camera->SetTargetPos(m_headPos);
 		m_camera->Update();
 
 		m_view = m_camera->GetView();
 		m_proj = m_camera->GetProj();
 	}
-
+	m_ObjSkydome.Update();
+	m_ObjGround.Update();
 }
 
 #pragma region グラウンド
@@ -369,48 +323,9 @@ void Game::Render()
 	m_d3dContext->OMSetBlendState(m_states->Opaque(), nullptr, 0xFFFFFFFF);
 	m_d3dContext->OMSetDepthStencilState(m_states->DepthNone(), 0);
 	m_d3dContext->RSSetState(m_states->Wireframe());
+										
 
-	// ビュー行列を生成
-
-	//m_view = Matrix::CreateLookAt(Vector3(0.f, 0.f, 2.f),		// カメラ視点
-	//	Vector3(0.f, 0.f, 0.f),									// カメラ注視点
-	//	Vector3(0.f, 1.f, 0.f)									// 上方向ベクトル
-	//);										
-
-	// m_view = m_debugCamera->GetCameraMatrix();
-
-	//// カメラの位置(視点座標)
-	//Vector3 eyePos(m_headPos.x, m_headPos.y+ 2.0f, m_headPos.z + 5.0f);
-
-	//// カメラの見ている先(注視点)
-	//Vector3 targetPos(m_headPos);
-
-	//// カメラの上方向ベクトル
-	//Vector3 upVec(0.0f, 1.0f, 0.0f);
-	//upVec.Normalize();
-
-
-	//m_view = Matrix::CreateLookAt(eyePos, targetPos, upVec);
-
-	//// 垂直方向視野角
-	//float fovT = XMConvertToRadians(60);
-
-	//// アスペクト比(横×縦の画面比率)
-	//float aspect = (float)m_outputWidth / m_outputHeight;
-
-	//// ニアクリップ
-	//float nearClip = 0.1f;
-
-	//// ファークリップ
-	//float farClip = 1000.0f;
-
-	//// プロジェクション行列を生成
-	//m_proj = Matrix::CreatePerspectiveFieldOfView(
-	//	fovT,aspect,nearClip,farClip);
-											
-											
-
-
+	
 	m_effect->SetView(m_view);
 	m_effect->SetProjection(m_proj);
 
@@ -421,46 +336,23 @@ void Game::Render()
 
 	// 実際の描画部分
 
-	// モデルの描画
-	//for (int i = 0; i < Game::GROUND_NUM; i++)
-	//{
-	//	m_modelGound->Draw(m_d3dContext.Get(), *m_states, m_worldGround[i], m_view, m_proj);
-	//}
 
-	//for (int i = 0; i < Game::POT_NUM; i++)
-	//{
-	//	m_modelPot->Draw(m_d3dContext.Get(), *m_states, m_worldPot[i], m_view, m_proj);
-	//}
-	//
+	m_ObjSkydome.Draw();
 
-	m_modelGound->Draw(m_d3dContext.Get(), *m_states, Matrix::Identity, m_view, m_proj);
-	
-	// 頭
-	m_modelHead->Draw(m_d3dContext.Get(), *m_states, m_worldHead, m_view, m_proj);
+	// プレイヤー描画
+	m_player->Draw();
 
-	m_modelSkydome->Draw(m_d3dContext.Get(), *m_states, Matrix::Identity, m_view, m_proj);
+	// エネミー描画
+	std::vector<std::unique_ptr<Enemy>>::iterator itr;
+	for (itr = m_enemies.begin(); itr != m_enemies.end(); itr++)
+	{
+		(*itr)->Draw();
+	}
 
-	//for (int i = 0; i < Game::SPHERE_NUM; i++)
-	//{
-	//	m_modelSphere->Draw(m_d3dContext.Get(), *m_states, m_worldSpehre[i], m_view, m_proj);
-	//}
+	m_ObjGround.Draw();
+
 
 	m_batch->Begin();		// ここから描画=====
-	//m_batch->DrawLine(
-	//	VertexPositionColor(Vector3(300, 300, 0), Colors::Black),
-	//	VertexPositionColor(Vector3(300 + 100, 300 + 100, 0), Colors::Green)
-	//);
-
-	//VertexPositionColor v1(Vector3(0.f, 0.5f, 0.5f), Colors::Black);
-	//VertexPositionColor v2(Vector3(0.5f, -0.5f, 0.5f), Colors::Green);
-	//VertexPositionColor v3(Vector3(-0.5f, -0.5f, 0.5f), Colors::White);
-
-
-	//m_batch->DrawTriangle(v1, v2, v3);
-
-	m_batch->DrawIndexed(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, indexes, 6, vertices, 4);
-
-
 
 	m_batch->End();			// ここまで描画=====
 

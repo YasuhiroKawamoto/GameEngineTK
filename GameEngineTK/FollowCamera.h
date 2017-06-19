@@ -3,6 +3,7 @@
 /// </summary>
 #pragma once		
 #include "Camera.h"
+#include "Player.h"
 
 
 
@@ -22,6 +23,9 @@ private:
 
 	// カメラモード
 	int m_mode;
+
+	// プレイヤー
+	Player* m_player;
 public:
 	static const float CAMERA_DISTANCE;
 
@@ -44,6 +48,11 @@ public:
 	int GetMode()
 	{
 		return m_mode;
+	}
+
+	void SetPlayer(Player* player)
+	{
+		m_player = player;
 	}
 
 };

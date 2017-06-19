@@ -5,22 +5,79 @@
       <UniqueIdentifier>2be426cc-5ca7-4462-a1d9-4d0bc679e6f8</UniqueIdentifier>
       <Extensions>ico;cur;bmp;dds;dlg;fbx;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tga;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="キャラクター">
+      <UniqueIdentifier>{221f24c6-9618-4160-993f-da8fdd67762a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ステート">
+      <UniqueIdentifier>{121942aa-b159-4771-b5d7-6e65c03a4e25}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="カメラ">
+      <UniqueIdentifier>{e9c8e7fe-b299-4c01-937d-9956c534c7d4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="StepTimer.h" />
-    <ClInclude Include="DebugCamera.h" />
-    <ClInclude Include="Camera.h" />
-    <ClInclude Include="FollowCamera.h" />
+    <ClInclude Include="Obj3d.h" />
+    <ClInclude Include="Collision.h" />
+    <ClInclude Include="Player.h">
+      <Filter>キャラクター</Filter>
+    </ClInclude>
+    <ClInclude Include="Character.h">
+      <Filter>キャラクター</Filter>
+    </ClInclude>
+    <ClInclude Include="Enemy.h">
+      <Filter>キャラクター</Filter>
+    </ClInclude>
+    <ClInclude Include="AttackState.h">
+      <Filter>ステート</Filter>
+    </ClInclude>
+    <ClInclude Include="State.h">
+      <Filter>ステート</Filter>
+    </ClInclude>
+    <ClInclude Include="FollowCamera.h">
+      <Filter>カメラ</Filter>
+    </ClInclude>
+    <ClInclude Include="DebugCamera.h">
+      <Filter>カメラ</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>カメラ</Filter>
+    </ClInclude>
+    <ClInclude Include="CollisionNode.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="Main.cpp" />
-    <ClCompile Include="DebugCamera.cpp" />
-    <ClCompile Include="Camera.cpp" />
-    <ClCompile Include="FollowCamera.cpp" />
+    <ClCompile Include="Obj3d.cpp" />
+    <ClCompile Include="Collision.cpp" />
+    <ClCompile Include="Player.cpp">
+      <Filter>キャラクター</Filter>
+    </ClCompile>
+    <ClCompile Include="Character.cpp">
+      <Filter>キャラクター</Filter>
+    </ClCompile>
+    <ClCompile Include="Enemy.cpp">
+      <Filter>キャラクター</Filter>
+    </ClCompile>
+    <ClCompile Include="AttackState.cpp">
+      <Filter>ステート</Filter>
+    </ClCompile>
+    <ClCompile Include="State.cpp">
+      <Filter>ステート</Filter>
+    </ClCompile>
+    <ClCompile Include="DebugCamera.cpp">
+      <Filter>カメラ</Filter>
+    </ClCompile>
+    <ClCompile Include="FollowCamera.cpp">
+      <Filter>カメラ</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>カメラ</Filter>
+    </ClCompile>
+    <ClCompile Include="CollisionNode.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />
@@ -52,6 +109,33 @@
       <Filter>Assets</Filter>
     </MeshContentTask>
     <MeshContentTask Include="Assets\Head.FBX">
+      <Filter>Assets</Filter>
+    </MeshContentTask>
+    <MeshContentTask Include="Assets\Arm.FBX">
+      <Filter>Assets</Filter>
+    </MeshContentTask>
+    <MeshContentTask Include="Assets\Body.FBX">
+      <Filter>Assets</Filter>
+    </MeshContentTask>
+    <MeshContentTask Include="Assets\Engine.FBX">
+      <Filter>Assets</Filter>
+    </MeshContentTask>
+    <MeshContentTask Include="Assets\Tank.FBX">
+      <Filter>Assets</Filter>
+    </MeshContentTask>
+    <MeshContentTask Include="Assets\Weapon.FBX">
+      <Filter>Assets</Filter>
+    </MeshContentTask>
+    <MeshContentTask Include="Assets\Sheild.FBX">
+      <Filter>Assets</Filter>
+    </MeshContentTask>
+    <MeshContentTask Include="Assets\Sword.FBX">
+      <Filter>Assets</Filter>
+    </MeshContentTask>
+    <MeshContentTask Include="Ball.fbx">
+      <Filter>Assets</Filter>
+    </MeshContentTask>
+    <MeshContentTask Include="Assets\SphereNode.FBX">
       <Filter>Assets</Filter>
     </MeshContentTask>
   </ItemGroup>

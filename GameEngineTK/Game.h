@@ -3,7 +3,6 @@
 //
 
 #pragma once
-#include "StepTimer.h"
 
 #include <PrimitiveBatch.h>
 #include <VertexTypes.h>
@@ -15,7 +14,10 @@
 
 #include "DebugCamera.h"
 #include "FollowCamera.h"
-
+#include "Player.h"
+#include "Enemy.h"
+#include "State.h"
+#include "StepTimer.h"
 
 
 // A basic game implementation that creates a D3D11 device and
@@ -23,6 +25,7 @@
 class Game
 {
 public:
+	
 
     Game();
 
@@ -102,49 +105,15 @@ private:
 	std::unique_ptr<DirectX::EffectFactory> m_factory;
 
 	// モデルデータ(地面) 
-	std::unique_ptr<DirectX::Model> m_modelGound;
+	Obj3d m_ObjGround;
 
 	// モデルデータ(天球)
-	std::unique_ptr<DirectX::Model> m_modelSkydome;
+	Obj3d m_ObjSkydome;
 
-	// モデルデータ(球)
-	//std::unique_ptr<DirectX::Model> m_modelSphere;
+	// プレイヤ
+	std::unique_ptr<Player> m_player;
+	std::vector<std::unique_ptr<Enemy>> m_enemies;
 
-	// モデルデータ(ポット)
-	std::unique_ptr<DirectX::Model> m_modelPot;
-
-	// モデルデータ(あたま)
-	std::unique_ptr<DirectX::Model> m_modelHead;
-
-
-	// static const int SPHERE_NUM = 21;
-	static const int POT_NUM = 20;
-
-	static const int GROUND_NUM = 40000;
-
-	
-	// 球のワールド行列
-	// DirectX::SimpleMath::Matrix m_worldSpehre[SPHERE_NUM];
-
-	// 地面のワールド座標
-	DirectX::SimpleMath::Matrix m_worldGround[GROUND_NUM];
-
-	// ポットのワールド行列
-	DirectX::SimpleMath::Matrix m_worldPot[POT_NUM];
-
-	// ヘッドのワールド行列
-	DirectX::SimpleMath::Matrix m_worldHead;
-	DirectX::SimpleMath::Vector3 m_headPos;
-	float m_headRota;
-
-
-
-	int m_rndAng[POT_NUM];
-	int m_rndDis[POT_NUM];
-
-	int m_time;
-
-	float m_angle;
 
 	// キーボード
 	std::unique_ptr<DirectX::Keyboard> m_keyboard;
@@ -152,4 +121,5 @@ private:
 
 
 	std::unique_ptr<FollowCamera> m_camera;
+
 };
